@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Peça sobre o cartão – SENAI CMFP Lins</title>
+<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+<style>
+  html, body { margin:0; height:100%; overflow:hidden; font-family:"Segoe UI", Arial, sans-serif; }
+  .topo { position:fixed; top:0; left:0; right:0; z-index:10; display:flex; align-items:center; gap:10px;
+          padding:12px 14px; color:#fff; background:linear-gradient(#000c,#0000); }
+  .tag { background:#E30613; font-weight:800; padding:5px 9px; border-radius:6px; font-size:14px; }
+  #dica { position:fixed; left:50%; bottom:40px; transform:translateX(-50%); z-index:10; width:88%;
+          max-width:420px; background:#000c; color:#fff; border-left:5px solid #E30613; border-radius:10px;
+          padding:14px 16px; text-align:center; font-size:17px; font-weight:600; transition:opacity .3s; }
+  #carregando { position:fixed; inset:0; z-index:20; background:#0d0d0d; color:#fff; display:flex;
+                flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; }
+  #carregando .icone { width:100px; height:100px; border-radius:24px; background:#E30613; display:flex;
+                       align-items:center; justify-content:center; font:900 42px Arial; margin-bottom:22px; }
+  #carregando p { color:#ccc; font-size:17px; }
+</style>
+</head>
+<body>
+<div class="topo"><span class="tag">SENAI</span><b>CMFP Lins • Realidade Aumentada</b></div>
+<div id="dica">Aponte a câmera para o <b>quadro preto com o QR Code</b></div>
+<div id="carregando">
+  <div class="icone">3D</div>
+  <h2>ABRINDO A CÂMERA…</h2>
+  <p>Se o celular perguntar, toque em <b>"Permitir"</b>.<br>(só na primeira vez)</p>
+</div>
+
+<a-scene embedded vr-mode-ui="enabled: false" loading-screen="enabled: false"
+         renderer="logarithmicDepthBuffer: true; colorManagement: true; antialias: true"
+         arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960;">
+  <a-assets>
+    <a-asset-item id="peca" src="peca.glb"></a-asset-item>
+  </a-assets>
+
+  <a-marker id="marcador" type="pattern" url="marcador.patt" smooth="true" smoothCount="6" smoothTolerance="0.01" smoothThreshold="2">
+    <!-- peca.glb mede 0,56 m e já está com a base em y=0; o quadro mede 1 unidade -->
+    <a-entity gltf-model="#peca" scale="2.1 2.1 2.1" position="0 0 0" rotation="0 0 0"></a-entity>
+  </a-marker>
+
+  <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+  <a-entity light="type: directional; intensity: 1.2" position="1 3 2"></a-entity>
+  <a-entity camera></a-entity>
+</a-scene>
+
+<script>
+  const dica = document.getElementById('dica');
+  const m = document.getElementById('marcador');
+  m.addEventListener('markerFound', () => { dica.style.opacity = 0; });
+  m.addEventListener('markerLost',  () => { dica.style.opacity = 1; });
+  // esconde a tela de carregamento quando o vídeo da câmera começar
+  const t = setInterval(() => {
+    const v = document.querySelector('video');
+    if (v && v.readyState >= 2) { document.getElementById('carregando').style.display = 'none'; clearInterval(t); }
+  }, 300);
+  // se a câmera for negada
+  window.addEventListener('camera-error', () => {
+    document.querySelector('#carregando h2').textContent = 'CÂMERA BLOQUEADA';
+    document.querySelector('#carregando p').innerHTML =
+      'Libere a câmera: toque no cadeado ao lado do endereço → <b>Permissões</b> → <b>Câmera: Permitir</b> e recarregue.';
+  });
+</script>
+</body>
+</html>

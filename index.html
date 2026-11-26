@@ -133,7 +133,7 @@
   (function () {
     const params = new URLSearchParams(location.search);
     if (params.has('noar') || !(iOS || android)) return;
-    if (android) { location.replace(BASE + 'camera.html'); return; }   // Android: direto no modo câmera
+    if (android || iOS) { location.replace(BASE + 'marcador.html'); return; }   // celular: RA sobre o cartão (marcador)
     if (android && interno) {                       // mostra orientação, sem redirecionar
       document.getElementById('avisoInterno').style.display = 'flex';
       return;
