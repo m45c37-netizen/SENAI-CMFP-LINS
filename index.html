@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peça em Realidade Aumentada – SENAI CMFP Lins</title>
+<!-- Componente de RA do Google (Android: Scene Viewer / iPhone: Quick Look) -->
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<style>
+  :root { --vermelho:#E30613; --preto:#0d0d0d; --branco:#ffffff; --cinza:#2a2a2a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; background:var(--preto); color:var(--branco);
+               font-family:"Segoe UI", Arial, Helvetica, sans-serif; }
+  header { padding:14px 18px; border-bottom:4px solid var(--vermelho);
+           display:flex; align-items:center; gap:12px; }
+  header .tag { background:var(--vermelho); font-weight:800; padding:6px 10px;
+                border-radius:6px; letter-spacing:.5px; font-size:14px; }
+  header h1 { font-size:18px; font-weight:700; line-height:1.2; }
+  header small { display:block; font-weight:400; color:#bbb; font-size:13px; }
+
+  main { display:flex; flex-direction:column; height:calc(100% - 70px); }
+  model-viewer { flex:1; width:100%; background:radial-gradient(circle at 50% 40%, #2b2b2b, #0d0d0d 70%);
+                 --poster-color:transparent; }
+
+  /* Botão de RA */
+  .btn-ra { position:absolute; left:50%; bottom:22px; transform:translateX(-50%);
+            background:var(--vermelho); color:var(--branco); border:none; border-radius:40px;
+            padding:16px 28px; font-size:18px; font-weight:800; letter-spacing:.3px;
+            box-shadow:0 6px 20px rgba(227,6,19,.45); display:flex; align-items:center; gap:10px;
+            cursor:pointer; white-space:nowrap; }
+  .btn-ra svg { width:24px; height:24px; fill:currentColor; }
+
+  /* Aviso quando o aparelho não suporta RA (ex.: computador) */
+  .sem-ra { position:absolute; left:50%; bottom:22px; transform:translateX(-50%);
+            background:var(--cinza); border-left:5px solid var(--vermelho); padding:12px 16px;
+            border-radius:8px; font-size:15px; text-align:center; width:min(92%,460px); display:none; }
+  model-viewer:not([ar-status]) .sem-ra { }
+  .dica { text-align:center; font-size:14px; color:#bbb; padding:10px 14px 14px; }
+
+  /* Barra de carregamento */
+  .progresso { position:absolute; top:0; left:0; height:4px; background:var(--vermelho);
+               width:0; transition:width .2s; }
+</style>
+</head>
+<body>
+<header>
+  <span class="tag">SENAI</span>
+  <h1>NOME DA PEÇA<small>CMFP Lins • Realidade Aumentada</small></h1>
+</header>
+
+<main>
+  <!--
+    src = arquivo GLB exportado do STEP (coloque na mesma pasta deste index.html)
+    No iPhone, o model-viewer gera o USDZ automaticamente a partir do GLB.
+    ar-scale="auto" deixa a pessoa aumentar/diminuir a peça na RA.
+    Para mostrar sempre em tamanho real, troque por ar-scale="fixed".
+  -->
+  <model-viewer
+      id="viewer"
+      src="peca.glb"
+      alt="Peça em 3D – SENAI CMFP Lins"
+      ar
+      ar-modes="webxr scene-viewer quick-look"
+      ar-scale="auto"
+      camera-controls
+      touch-action="pan-y"
+      auto-rotate
+      auto-rotate-delay="0"
+      shadow-intensity="1"
+      exposure="1.1"
+      environment-image="neutral">
+
+    <div class="progresso" slot="progress-bar" id="barra"></div>
+
+    <button slot="ar-button" class="btn-ra">
+      <svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.3 6.5 3.6L12 11.5 5.5 7.9 12 4.3zM5 9.6l6 3.3v6.6l-6-3.3V9.6zm8 9.9v-6.6l6-3.3v6.6l-6 3.3z"/></svg>
+      VER NO SEU ESPAÇO
+    </button>
+
+    <div class="sem-ra" id="semRA">
+      Abra esta página pelo <b>celular</b> (lendo o QR Code) para ver a peça em Realidade Aumentada.
+    </div>
+  </model-viewer>
+  <p class="dica">Arraste para girar • Pinça para ampliar • Toque no botão vermelho para a RA</p>
+</main>
+
+<script>
+  const v = document.getElementById('viewer');
+  const barra = document.getElementById('barra');
+  v.addEventListener('progress', e => {
+    const p = e.detail.totalProgress;
+    barra.style.width = (p * 100) + '%';
+    if (p === 1) setTimeout(() => barra.style.display = 'none', 400);
+  });
+  // Mostra aviso se o aparelho não suportar RA
+  v.addEventListener('load', () => {
+    if (!v.canActivateAR) document.getElementById('semRA').style.display = 'block';
+  });
+</script>
+</body>
+</html>
