@@ -32,7 +32,7 @@
 </div>
 
 <a-scene mindar-image="imageTargetSrc: alvo.mind; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.001"
-         color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true" background="transparent: true"
+         color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
          vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" loading-screen="enabled: false">
   <a-assets><a-asset-item id="peca" src="peca.glb"></a-asset-item></a-assets>
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -55,9 +55,20 @@
   alvo.addEventListener('targetLost',  () => dica.style.opacity = 1);
   const cena = document.querySelector('a-scene');
   cena.addEventListener('arReady', () => document.getElementById('carregando').style.display = 'none');
-  const vigia = setInterval(() => {            // segurança: some assim que o vídeo da câmera rodar
+  // garante a câmera visível atrás da peça (sem mexer no tamanho/posição que o MindAR calcula)
+  function mostrarAmbiente() {
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+    const v = document.querySelector('video'), c = document.querySelector('canvas.a-canvas');
+    if (v) { v.style.zIndex = '0'; v.style.display = 'block'; }
+    if (c) { c.style.position = 'absolute'; c.style.zIndex = '1'; c.style.background = 'transparent'; }
+    if (cena.renderer) cena.renderer.setClearColor(0x000000, 0);
+    if (cena.object3D) cena.object3D.background = null;
+  }
+  cena.addEventListener('arReady', mostrarAmbiente);
+  const vigia = setInterval(() => {            // segurança: roda assim que o vídeo da câmera começar
     const v = document.querySelector('video');
-    if (v && v.readyState >= 2) { document.getElementById('carregando').style.display = 'none'; clearInterval(vigia); }
+    if (v && v.readyState >= 2) { document.getElementById('carregando').style.display = 'none'; mostrarAmbiente(); clearInterval(vigia); }
   }, 400);
   cena.addEventListener('arError', () => {
     document.querySelector('#carregando h2').textContent = 'CÂMERA BLOQUEADA';
