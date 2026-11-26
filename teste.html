@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teste de RA – SENAI CMFP Lins</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<style>
+  body { margin:0; background:#0d0d0d; color:#fff; font-family:Arial, sans-serif; padding:18px; }
+  h1 { font-size:22px; border-bottom:4px solid #E30613; padding-bottom:10px; }
+  a.b, button.b { display:block; width:100%; box-sizing:border-box; margin:14px 0; padding:20px; border-radius:14px;
+                  background:#E30613; color:#fff; font-size:20px; font-weight:800; text-align:center;
+                  text-decoration:none; border:none; }
+  .info { background:#222; border-radius:10px; padding:12px; font-size:13px; word-break:break-all; line-height:1.5; }
+  model-viewer { width:100%; height:180px; background:#1a1a1a; border-radius:10px; }
+</style>
+</head>
+<body>
+<h1>TESTE DE REALIDADE AUMENTADA</h1>
+<p>Toque em cada botão, um por vez. Anote qual número mostrou a peça.</p>
+
+<model-viewer id="mv" src="peca.glb" ar ar-modes="scene-viewer webxr quick-look" ios-src="peca.usdz" camera-controls>
+  <button slot="ar-button" style="display:none"></button>
+</model-viewer>
+
+<button class="b" id="b1">1 – RA pelo model-viewer</button>
+<a class="b" id="b2">2 – RA pelo app Google</a>
+<a class="b" id="b3">3 – RA pelo serviço de RA (ARCore)</a>
+
+<div class="info" id="info">carregando…</div>
+
+<script>
+  const BASE = 'https://m45c37-netizen.github.io/SENAI-CMFP-LINS/';
+  const file = encodeURIComponent(BASE + 'peca.glb');
+  const back = encodeURIComponent(BASE + 'teste.html');
+  document.getElementById('b2').href = 'intent://arvr.google.com/scene-viewer/1.0?file=' + file +
+    '&mode=ar_preferred#Intent;scheme=https;package=com.google.android.googlequicksearchbox;' +
+    'action=android.intent.action.VIEW;S.browser_fallback_url=' + back + ';end;';
+  document.getElementById('b3').href = 'intent://arvr.google.com/scene-viewer/1.2?file=' + file +
+    '&mode=ar_only#Intent;scheme=https;package=com.google.ar.core;' +
+    'action=android.intent.action.VIEW;S.browser_fallback_url=' + back + ';end;';
+  const mv = document.getElementById('mv');
+  document.getElementById('b1').onclick = () => {
+    if (mv.canActivateAR) mv.activateAR();
+    else alert('Botão 1: este navegador diz que NÃO suporta RA');
+  };
+  function info() {
+    document.getElementById('info').innerHTML =
+      '<b>Navegador:</b> ' + navigator.userAgent +
+      '<br><b>RA disponível (model-viewer):</b> ' + (mv.canActivateAR ? 'SIM' : 'NÃO') +
+      '<br><b>Peça carregada:</b> ' + (mv.loaded ? 'SIM' : 'ainda não');
+  }
+  mv.addEventListener('load', info);
+  setTimeout(info, 3000); setTimeout(info, 8000);
+</script>
+</body>
+</html>
