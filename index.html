@@ -123,8 +123,11 @@
     'package=com.google.ar.core;action=android.intent.action.VIEW;' +
     'S.browser_fallback_url=' + encodeURIComponent(BASE + '?noar=1') + ';end;';
   function abrirRA() {
-    if (iOS) location.href = BASE + 'peca.usdz';
-    else if (android) location.href = INTENT;
+    if (iOS) { location.href = BASE + 'peca.usdz'; return; }
+    const mv = document.getElementById('viewer');
+    // usa o caminho oficial do model-viewer (Scene Viewer / WebXR), que precisa de um toque
+    if (mv && mv.canActivateAR) mv.activateAR();
+    else location.href = INTENT;
   }
   (function () {
     const params = new URLSearchParams(location.search);
@@ -139,9 +142,10 @@
     const toque = document.getElementById('toqueRA');
     toque.style.display = 'flex';
     toque.addEventListener('click', () => { toque.style.display = 'none'; abrirRA(); });
-    if (recente) return;
+    if (!iOS || recente) return;                    // Android: abre com 1 toque na tela
     try { sessionStorage.setItem('arAberta', String(Date.now())); } catch (e) {}
-    abrirRA();                                      // tentativa automática
+    toque.style.display = 'none';
+    abrirRA();                                      // iPhone: abre sozinho
   })();
 
   const v = document.getElementById('viewer');
