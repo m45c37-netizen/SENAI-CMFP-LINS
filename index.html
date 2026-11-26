@@ -57,6 +57,8 @@
   <div class="icone">AR</div>
   <h2>TOQUE NA TELA</h2>
   <p>para ver a peça em Realidade Aumentada no seu ambiente</p>
+  <a href="camera.html" onclick="event.stopPropagation()" style="margin-top:26px;color:#fff;font-size:16px">
+     Não abriu? Usar o <b>modo câmera</b></a>
 </div>
 <div class="tela" id="avisoInterno">
   <div class="icone">⋮</div>
@@ -65,6 +67,7 @@
      Toque nos <b>3 pontinhos ⋮</b> e escolha <b>"Abrir no Chrome"</b>.</p>
   <a class="btn-ra" style="position:static;transform:none;margin-top:26px;text-decoration:none"
      href="intent://m45c37-netizen.github.io/SENAI-CMFP-LINS/#Intent;scheme=https;package=com.android.chrome;end;">ABRIR NO CHROME</a>
+  <a class="fechar" href="camera.html" style="text-decoration:none">Usar modo câmera</a>
   <button class="fechar" onclick="this.parentNode.style.display='none'">Ver só em 3D</button>
 </div>
 <header>
@@ -121,13 +124,11 @@
   const INTENT = 'intent://arvr.google.com/scene-viewer/1.2?file=' + encodeURIComponent(BASE + 'peca.glb') +
     '&mode=ar_only&resizable=true&title=SENAI%20CMFP%20Lins#Intent;scheme=https;' +
     'package=com.google.ar.core;action=android.intent.action.VIEW;' +
-    'S.browser_fallback_url=' + encodeURIComponent(BASE + '?noar=1') + ';end;';
+    'S.browser_fallback_url=' + encodeURIComponent(BASE + 'camera.html') + ';end;';   // sem ARCore → modo câmera
   function abrirRA() {
     if (iOS) { location.href = BASE + 'peca.usdz'; return; }
-    const mv = document.getElementById('viewer');
-    // usa o caminho oficial do model-viewer (Scene Viewer / WebXR), que precisa de um toque
-    if (mv && mv.canActivateAR) mv.activateAR();
-    else location.href = INTENT;
+    // Android: RA pelo ARCore; se o celular não tiver ARCore, o Chrome abre o modo câmera
+    location.href = INTENT;
   }
   (function () {
     const params = new URLSearchParams(location.search);

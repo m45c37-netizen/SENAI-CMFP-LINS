@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Peça no seu ambiente – SENAI CMFP Lins</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<style>
+  :root { --vermelho:#E30613; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; overflow:hidden; background:#000; color:#fff; font-family:"Segoe UI", Arial, sans-serif; }
+  #cam { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; }
+  model-viewer { position:fixed; inset:0; width:100%; height:100%; background:transparent;
+                 --poster-color:transparent; }
+  .topo { position:fixed; top:0; left:0; right:0; z-index:5; display:flex; align-items:center; gap:10px;
+          padding:12px 14px; background:linear-gradient(#000c,#0000); }
+  .tag { background:var(--vermelho); font-weight:800; padding:5px 9px; border-radius:6px; font-size:14px; }
+  .topo b { font-size:16px; }
+  .dica { position:fixed; left:0; right:0; bottom:118px; z-index:5; text-align:center; font-size:15px;
+          text-shadow:0 1px 4px #000; }
+  .barra { position:fixed; left:0; right:0; bottom:0; z-index:5; display:flex; justify-content:center; gap:18px;
+           align-items:center; padding:18px 0 28px; background:linear-gradient(#0000,#000b); }
+  .foto { width:74px; height:74px; border-radius:50%; background:#fff; border:6px solid var(--vermelho);
+          box-shadow:0 4px 18px #0008; }
+  .peq { background:#000a; color:#fff; border:1px solid #fff6; border-radius:30px; padding:12px 16px;
+         font-size:14px; font-weight:700; }
+  .tela { position:fixed; inset:0; z-index:9; display:flex; flex-direction:column; align-items:center;
+          justify-content:center; text-align:center; padding:30px; background:#0d0d0d; }
+  .tela .icone { width:110px; height:110px; border-radius:26px; background:var(--vermelho); display:flex;
+                 align-items:center; justify-content:center; font:900 46px Arial; margin-bottom:24px;
+                 box-shadow:0 0 40px #e3061399; }
+  .tela h2 { font-size:28px; margin-bottom:10px; } .tela p { color:#ccc; font-size:17px; max-width:420px; }
+  #previa { display:none; position:fixed; inset:0; z-index:10; background:#000e; flex-direction:column;
+            align-items:center; justify-content:center; gap:16px; padding:20px; }
+  #previa img { max-width:100%; max-height:72vh; border-radius:12px; border:3px solid var(--vermelho); }
+  #previa .acoes { display:flex; gap:12px; }
+  #previa a, #previa button { background:var(--vermelho); color:#fff; border:none; border-radius:30px;
+                              padding:14px 20px; font-size:16px; font-weight:800; text-decoration:none; }
+</style>
+</head>
+<body>
+<video id="cam" playsinline autoplay muted></video>
+
+<model-viewer id="mv" src="peca.glb" alt="Peça em 3D – SENAI CMFP Lins"
+  camera-controls touch-action="none" interaction-prompt="none" disable-pan
+  camera-orbit="35deg 72deg auto" shadow-intensity="1.2" shadow-softness="0.8"
+  exposure="1.15" environment-image="neutral"></model-viewer>
+
+<div class="topo"><span class="tag">SENAI</span><b>CMFP Lins • Peça no seu ambiente</b></div>
+<div class="dica">Arraste para girar • Pinça para ampliar ou reduzir</div>
+<div class="barra">
+  <button class="peq" id="trocar">↺ Câmera</button>
+  <button class="foto" id="foto" aria-label="Tirar foto"></button>
+  <button class="peq" id="centro">⟲ Centralizar</button>
+</div>
+
+<div class="tela" id="inicio">
+  <div class="icone">3D</div>
+  <h2>TOQUE PARA COMEÇAR</h2>
+  <p>A câmera vai abrir e a peça aparece no seu ambiente.<br><br>Se o celular pedir, toque em <b>"Permitir"</b> para usar a câmera.</p>
+</div>
+
+<div id="previa">
+  <img id="img" alt="Foto">
+  <div class="acoes">
+    <a id="baixar" download="peca-senai-cmfp-lins.jpg">Salvar foto</a>
+    <button id="fechar">Voltar</button>
+  </div>
+</div>
+
+<script>
+  const cam = document.getElementById('cam');
+  const mv = document.getElementById('mv');
+  let modo = 'environment', stream = null;
+
+  async function abrirCamera() {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: modo }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+      cam.srcObject = stream; await cam.play();
+      document.getElementById('inicio').style.display = 'none';
+    } catch (e) {
+      document.querySelector('#inicio h2').textContent = 'CÂMERA BLOQUEADA';
+      document.querySelector('#inicio p').innerHTML =
+        'Libere a câmera para este site: toque no cadeado ao lado do endereço → <b>Permissões</b> → <b>Câmera: Permitir</b>. Depois toque aqui de novo.';
+    }
+  }
+  document.getElementById('inicio').addEventListener('click', abrirCamera);
+  // tenta abrir direto (se a permissão já tiver sido dada antes, nem aparece a tela)
+  abrirCamera();
+
+  document.getElementById('trocar').onclick = () => { modo = modo === 'environment' ? 'user' : 'environment'; abrirCamera(); };
+  document.getElementById('centro').onclick = () => { mv.cameraOrbit = '35deg 72deg auto'; mv.fieldOfView = 'auto'; };
+
+  // Foto: junta a imagem da câmera com a peça 3D
+  document.getElementById('foto').onclick = async () => {
+    const W = innerWidth * devicePixelRatio, H = innerHeight * devicePixelRatio;
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+    const vw = cam.videoWidth, vh = cam.videoHeight;
+    if (vw) { const s = Math.max(W / vw, H / vh); g.drawImage(cam, (W - vw * s) / 2, (H - vh * s) / 2, vw * s, vh * s); }
+    const img = new Image(); img.src = mv.toDataURL('image/png');
+    await img.decode(); g.drawImage(img, 0, 0, W, H);
+    g.fillStyle = '#E30613'; g.fillRect(0, H - 70 * devicePixelRatio, W, 70 * devicePixelRatio);
+    g.fillStyle = '#fff'; g.font = `800 ${26 * devicePixelRatio}px Arial`; g.textAlign = 'center';
+    g.fillText('SENAI CMFP LINS • @senaicmfplins', W / 2, H - 26 * devicePixelRatio);
+    const url = c.toDataURL('image/jpeg', 0.92);
+    document.getElementById('img').src = url; document.getElementById('baixar').href = url;
+    document.getElementById('previa').style.display = 'flex';
+  };
+  document.getElementById('fechar').onclick = () => document.getElementById('previa').style.display = 'none';
+</script>
+</body>
+</html>
