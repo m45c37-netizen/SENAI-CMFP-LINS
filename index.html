@@ -63,6 +63,8 @@
   <h2>ABRA NO CHROME</h2>
   <p>Este leitor abriu um navegador interno, que não mostra Realidade Aumentada.<br><br>
      Toque nos <b>3 pontinhos ⋮</b> e escolha <b>"Abrir no Chrome"</b>.</p>
+  <a class="btn-ra" style="position:static;transform:none;margin-top:26px;text-decoration:none"
+     href="intent://m45c37-netizen.github.io/SENAI-CMFP-LINS/#Intent;scheme=https;package=com.android.chrome;end;">ABRIR NO CHROME</a>
   <button class="fechar" onclick="this.parentNode.style.display='none'">Ver só em 3D</button>
 </div>
 <header>
@@ -115,9 +117,10 @@
   const android = /Android/i.test(ua);
   // navegadores internos de apps (câmera, Lens, Instagram, Facebook...) não abrem a RA
   const interno = /; wv\)|Version\/[\d.]+ Chrome\/|Instagram|FBAN|FBAV|FB_IAB|Line\/|GSA\//i.test(ua);
-  const INTENT = 'intent://arvr.google.com/scene-viewer/1.0?file=' + encodeURIComponent(BASE + 'peca.glb') +
-    '&mode=ar_preferred&title=SENAI%20CMFP%20Lins#Intent;scheme=https;' +
-    'package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;' +
+  // Scene Viewer via Google Play Services para RA (ARCore) – não passa pelo app Google/Lens
+  const INTENT = 'intent://arvr.google.com/scene-viewer/1.2?file=' + encodeURIComponent(BASE + 'peca.glb') +
+    '&mode=ar_only&resizable=true&title=SENAI%20CMFP%20Lins#Intent;scheme=https;' +
+    'package=com.google.ar.core;action=android.intent.action.VIEW;' +
     'S.browser_fallback_url=' + encodeURIComponent(BASE + '?noar=1') + ';end;';
   function abrirRA() {
     if (iOS) location.href = BASE + 'peca.usdz';
