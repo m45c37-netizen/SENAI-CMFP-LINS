@@ -24,7 +24,7 @@
 </head>
 <body>
 <div class="topo"><span class="tag">SENAI</span><b style="color:#fff">CMFP Lins • Realidade Aumentada</b></div>
-<div id="dica">Aponte a câmera para o <b>QR Code impresso</b></div>
+<div id="dica">Aponte a câmera para o <b>QR Code impresso</b><br><small>1 dedo: girar • 2 dedos: aumentar/diminuir</small></div>
 <div id="carregando">
   <div class="icone">3D</div>
   <h2>ABRINDO A CÂMERA…</h2>
@@ -40,7 +40,9 @@
   <!-- largura da arte impressa = 1 unidade; o QR fica no centro (y ≈ -0,03) -->
   <a-entity id="alvo" mindar-image-target="targetIndex: 0">
     <a-entity position="0 -0.03 0" rotation="90 0 0">
-      <a-gltf-model src="#peca" scale="1 1 1"></a-gltf-model>
+      <a-entity id="giro">
+        <a-gltf-model id="modelo" src="#peca" scale="1 1 1"></a-gltf-model>
+      </a-entity>
     </a-entity>
   </a-entity>
 
@@ -49,6 +51,57 @@
 </a-scene>
 
 <script>
+  // ===== Ambiente de luz (reflexos do metal, como no visualizador 3D) =====
+  function criarAmbiente(renderer) {
+    const THREE = AFRAME.THREE;
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 256;
+    const g = cv.getContext('2d');
+    const grad = g.createLinearGradient(0, 0, 0, 256);           // céu claro → horizonte → chão
+    grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.45, '#d9d9d9');
+    grad.addColorStop(0.55, '#8a8a8a'); grad.addColorStop(1, '#3a3a3a');
+    g.fillStyle = grad; g.fillRect(0, 0, 512, 256);
+    g.fillStyle = 'rgba(255,255,255,0.95)';                       // "janelas" de luz para brilho
+    [[60,40,90,60],[250,30,70,50],[400,45,80,55]].forEach(r => g.fillRect(...r));
+    const tex = new THREE.CanvasTexture(cv); tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    return pmrem.fromEquirectangular(tex).texture;
+  }
+  const modelo = document.getElementById('modelo');
+  modelo.addEventListener('model-loaded', () => {
+    const cenaEl = document.querySelector('a-scene');
+    const aplicar = () => {
+      const env = criarAmbiente(cenaEl.renderer);
+      modelo.getObject3D('mesh').traverse(o => {
+        if (o.isMesh && o.material) {
+          const mats = Array.isArray(o.material) ? o.material : [o.material];
+          mats.forEach(m => { m.envMap = env; m.envMapIntensity = 1.2; m.needsUpdate = true; });
+        }
+      });
+    };
+    if (cenaEl.renderer) aplicar(); else cenaEl.addEventListener('renderstart', aplicar);
+  });
+
+  // ===== Gestos: 1 dedo gira, 2 dedos (pinça) aumenta/diminui =====
+  const giro = document.getElementById('giro');
+  let angulo = 0, escala = 1, ultX = null, distIni = null, escIni = 1;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  window.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) ultX = e.touches[0].clientX;
+    if (e.touches.length === 2) { distIni = dist(e.touches); escIni = escala; }
+  }, { passive: true });
+  window.addEventListener('touchmove', e => {
+    if (e.touches.length === 1 && ultX !== null) {
+      angulo += (e.touches[0].clientX - ultX) * 0.6; ultX = e.touches[0].clientX;
+      giro.object3D.rotation.y = AFRAME.THREE.MathUtils.degToRad(angulo);
+    } else if (e.touches.length === 2 && distIni) {
+      escala = Math.min(4, Math.max(0.3, escIni * dist(e.touches) / distIni));
+      giro.object3D.scale.set(escala, escala, escala);
+    }
+    e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchend', e => { if (e.touches.length === 0) { ultX = null; distIni = null; } });
+
   const dica = document.getElementById('dica');
   const alvo = document.getElementById('alvo');
   alvo.addEventListener('targetFound', () => dica.style.opacity = 0);
