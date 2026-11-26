@@ -58,6 +58,7 @@
   <model-viewer
       id="viewer"
       src="peca.glb"
+      ios-src="peca.usdz"
       alt="Peça em 3D – SENAI CMFP Lins"
       ar
       ar-modes="webxr scene-viewer quick-look"
@@ -85,6 +86,33 @@
 </main>
 
 <script>
+  // ===== Abre a RA automaticamente ao ler o QR Code =====
+  (function () {
+    const BASE = 'https://m45c37-netizen.github.io/SENAI-CMFP-LINS/';
+    const ua = navigator.userAgent;
+    const iOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    const android = /Android/i.test(ua);
+    const params = new URLSearchParams(location.search);
+    // evita reabrir em loop ao voltar da RA (só abre de novo depois de 60 s)
+    let recente = false;
+    try { recente = Date.now() - Number(sessionStorage.getItem('arAberta') || 0) < 60000; } catch (e) {}
+    if (params.has('noar') || recente) return;
+    try { sessionStorage.setItem('arAberta', String(Date.now())); } catch (e) {}
+
+    if (iOS) {
+      // iPhone/iPad: abrir o USDZ direto abre o AR Quick Look
+      location.href = BASE + 'peca.usdz';
+    } else if (android) {
+      // Android: abre o Scene Viewer do Google direto em modo RA
+      const file = encodeURIComponent(BASE + 'peca.glb');
+      const volta = encodeURIComponent(BASE + '?noar=1');
+      location.href = 'intent://arvr.google.com/scene-viewer/1.0?file=' + file +
+        '&mode=ar_preferred&title=SENAI%20CMFP%20Lins#Intent;scheme=https;' +
+        'package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;' +
+        'S.browser_fallback_url=' + volta + ';end;';
+    }
+  })();
+
   const v = document.getElementById('viewer');
   const barra = document.getElementById('barra');
   v.addEventListener('progress', e => {
