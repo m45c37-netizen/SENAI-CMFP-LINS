@@ -7,7 +7,8 @@
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
-  html, body { margin:0; height:100%; overflow:hidden; font-family:"Segoe UI", Arial, sans-serif; background:#000; }
+  html, body { margin:0; height:100%; overflow:hidden; font-family:"Segoe UI", Arial, sans-serif; background:transparent; }
+  /* o vídeo da câmera fica atrás da cena (z-index negativo do MindAR): nada pode ter fundo opaco */
   .topo { position:fixed; top:0; left:0; right:0; z-index:10; display:flex; align-items:center; gap:10px;
           padding:12px 14px; color:#fff; background:linear-gradient(#000c,#0000); }
   .tag { background:#E30613; font-weight:800; padding:5px 9px; border-radius:6px; font-size:14px; }
@@ -31,7 +32,7 @@
 </div>
 
 <a-scene mindar-image="imageTargetSrc: alvo.mind; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.001"
-         color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true"
+         color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true" background="transparent: true"
          vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" loading-screen="enabled: false">
   <a-assets><a-asset-item id="peca" src="peca.glb"></a-asset-item></a-assets>
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -54,6 +55,10 @@
   alvo.addEventListener('targetLost',  () => dica.style.opacity = 1);
   const cena = document.querySelector('a-scene');
   cena.addEventListener('arReady', () => document.getElementById('carregando').style.display = 'none');
+  const vigia = setInterval(() => {            // segurança: some assim que o vídeo da câmera rodar
+    const v = document.querySelector('video');
+    if (v && v.readyState >= 2) { document.getElementById('carregando').style.display = 'none'; clearInterval(vigia); }
+  }, 400);
   cena.addEventListener('arError', () => {
     document.querySelector('#carregando h2').textContent = 'CÂMERA BLOQUEADA';
     document.querySelector('#carregando p').innerHTML =
